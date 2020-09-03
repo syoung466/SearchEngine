@@ -1,0 +1,113 @@
+{% extends "main/base.html" %}
+
+{% block content %}
+
+    <form action="/search" method="get">
+        <div class="form-group">
+            <input type="text" class="form-control" name="search" value="{{search}}" id="query">
+        </div>
+        <div class="form-group">
+            <input type="submit" value="Search!" class="btn btn-success btn-block">
+        </div>
+
+    </form>
+
+    <br>
+
+    <h1 align="center"> Search results </h1> <br>
+
+    {% if len_results == 0 %}
+        {% if page == 1 %}
+            <h2 align="center"> Huh, there are no results found on this search ... </h2> <br> <br>
+            <a href="/"> Search for something else! </a>
+        {% else %}
+            <h2 align="center">  There are no results on this page </h2> <br>
+            <h5 align="center"> Why? </h5>
+            <p>
+                Well, the number of pages is just an estimation, not the exact number for perfomance reason. It seems like
+                we have estimated that the number of pages with results for this query is greater than it in fact is. And you
+                went to the page that is just too great. Sorry for that.
+            </p>
+            <p>
+                We suggest that you <a href="/search?search={{q}}"> go to the first page </a> where most relevant results are.
+            </p>
+        {% endif %}
+    {% else %}
+
+        <p style="text-align: right;">
+            Approximately {{count}} results in {{time|floatformat:2}} seconds. <br>
+            Showing results {{from}}-{{to}}
+        </p>
+
+        {% for result in results %}
+            <strong>
+                {% if result.show_title %}
+                    <a href="//{{result.url}}" target="_blank"> {{result.title}} </a> <br>
+                    <span style="color: green;">
+                        <small> {{ result.url }} </small>
+                    </span>
+                {% else %}
+                    <a href="//{{result.url}}" target="_blank"> {{result.url}} </a>
+                {% endif %}
+            </strong> <br>
+            <p>
+                {{result.show_content}} <br>
+                <small> Relevancy: {{result.relevancy}}</small> <br> <br>
+            </p>
+        {% endfor %}
+
+        <p style="text-align: center">
+
+            <strong> Pages: </strong> &nbsp; &nbsp;
+
+            {% if page != 1 %}
+                <a href="/search?search={{q}}"> << </a> &nbsp; &nbsp;
+            {% endif %}
+
+            {% for show_page in pages %}
+                {% if page != show_page %}
+                    <a href="/search?search={{q}}&page={{show_page}}"> {{show_page}} </a>
+                {% else %}
+                    {{ show_page }}
+                {% endif %}
+                &nbsp; &nbsp;
+            {% endfor %}
+
+            <a href="/search?search={{q}}&page={{ff}}"> >> </a>
+
+        </p>
+    {% endif %}
+
+{% endblock %}
+
+{% block javascript %}
+    <script>
+        var options = {
+            url: function(phrase) {
+                return "/api/suggest";
+            },
+
+            getValue: function(element) {
+                return element.name;
+            },
+
+            ajaxSettings: {
+                dataType: "json",
+                method: "POST",
+                data: {
+                    dataType: "json"
+                }
+            },
+
+            preparePostData: function(data) {
+                data.q = $("#query").val();
+                return data;
+            },
+
+            requestDelay: 0
+        };
+
+        $("#query").easyAutocomplete(options);
+    </script>
+
+{% endblock %}
